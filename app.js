@@ -925,7 +925,7 @@
     if (preview.open) {
       els.previewStage.innerHTML = gridToHtml(buildAuroraGrid(preview.score, frame, 'fresh', true));
     }
-    const delay = Math.max(170, 310 - score * 1.1);
+    const delay = Math.max(130, 240 - score * 0.825);
     setTimeout(renderAuroraFrame, delay);
   }
 
