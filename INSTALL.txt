@@ -1,0 +1,11 @@
+Aurora Observation Terminal v2.6 — Preview + Real-Data Event Archive
+
+Recommended: make a backup of your project folder and click "Export review JSON" in the existing site before updating.
+
+Copy index.html, styles.css, and app.js from this patch into your existing aurora-observation-terminal folder, replacing exactly those three files. Keep all your existing assets/studio-task-assets/... files and docs folder.
+
+On Windows Chrome, press Ctrl+Shift+R for a hard refresh. Using the SAME original URL/origin is important for preserving browser localStorage records. Opening a different file:// path or a new GitHub Pages URL may not expose previous records.
+
+PREVIEW MODE is synthetic, never written to either real or fixture storage. Real events are captured only after successful NOAA responses >=65pt while your browser is open and polling approximately every 15 minutes. Stored snapshots remain in this browser; no backend runs while the tab is closed.
+
+The included test report documents simulated integration testing, NOT proof of real NOAA values. Real Card 5 evidence requires 2 real KST dates.

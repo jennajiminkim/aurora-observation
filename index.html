@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aurora Observation Terminal</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="crt"></div>
+  <main class="app-shell">
+    <header class="topbar" aria-label="application menu">
+      <div class="menu-left">
+        <span class="app-icon">▣</span>
+        <span>File</span><span>Edit</span><span>View</span><span>Chart</span><span>Camera</span><span>Station</span><span>Window</span><span>Help</span>
+      </div>
+      <time id="clockUtc">--:--:-- UTC</time>
+    </header>
+
+    <section class="terminal-frame" aria-label="Aurora observation information board">
+      <section class="panel hero-panel">
+        <div class="panel-title">
+          <span>AURORA OBSERVATION SYSTEM v2.6</span>
+          <span id="liveBadge" class="badge standby">STANDBY</span>
+        </div>
+
+        <div class="station-lines">
+          <span>STATION : <strong>KILPISJÄRVI 01</strong></span>
+          <span>LOCATION: <strong>69.03°N 20.79°E</strong></span>
+          <span>SOURCE  : <strong>NOAA SWPC OVATION</strong></span>
+          <span>TZ      : <strong>Asia/Seoul</strong></span>
+        </div>
+
+        <div id="auroraViewport" class="aurora-viewport">
+          <pre id="auroraStage" class="aurora-stage" aria-label="animated ascii aurora"></pre>
+        </div>
+      </section>
+
+      <aside class="panel reading-panel">
+        <div class="panel-title">AURORA ACTIVITY</div>
+        <div class="reading-big"><span id="activityValue">--</span><small id="activityUnit">pt</small></div>
+        <div id="activityLabel" class="status-label">NO CURRENT DATA</div>
+        <div class="bar-frame" aria-label="activity intensity meter"><div id="activityBar" class="bar-fill"></div></div>
+        <dl class="readout-list">
+          <div><dt>YESTERDAY</dt><dd id="yesterdayValue">--</dd></div>
+          <div><dt>CHANGE</dt><dd id="deltaValue">--</dd></div>
+          <div><dt>KP INDEX</dt><dd id="kpValue">--</dd></div>
+          <div><dt>RECORD DATE</dt><dd id="recordDate">--</dd></div>
+          <div><dt>SOURCE TIME</dt><dd id="sourceTime">--</dd></div>
+          <div><dt>FETCHED AT</dt><dd id="fetchedAt">--</dd></div>
+        </dl>
+      </aside>
+
+      <section class="panel chart-panel">
+        <div class="panel-title">DAILY RECORDS / ASIA-SEOUL</div>
+        <div id="historyChart" class="history-chart" aria-label="daily record chart"></div>
+        <table class="record-table">
+          <thead><tr><th>Date</th><th>Value</th><th>Source time</th><th>Status</th></tr></thead>
+          <tbody id="recordsBody"><tr><td colspan="4">No live records yet.</td></tr></tbody>
+        </table>
+      </section>
+
+      <section class="panel archive-panel" aria-label="Captured real aurora event archive">
+        <div class="panel-title">
+          <span>AURORA EVENT ARCHIVE / REAL NOAA ONLY</span>
+          <span id="archiveCount">0 saved events</span>
+        </div>
+        <div class="archive-summary">
+          <div><strong>THRESHOLD ≥65 pt</strong> · first eligible NOAA forecast only</div>
+          <div id="monitorStatus">AUTO: 15 min · browser open only</div>
+          <div id="archiveStatus">Armed / waiting for real activity</div>
+        </div>
+        <p class="quiet">Forecast activity, not confirmed visual sighting. The HTML ASCII frame is frozen at capture time and saved only in this browser. Closing the tab stops new polling; preview/fixtures never generate events.</p>
+        <div class="archive-columns">
+          <div id="archiveList" class="archive-list" aria-label="Saved real NOAA events"></div>
+          <div class="archive-viewer">
+            <div class="archive-viewer-head">
+              <strong>FROZEN ASCII FRAME</strong>
+              <div class="button-row compact"><button id="downloadPngButton" type="button">Download PNG</button><button id="downloadEventButton" type="button">Download HTML</button></div>
+            </div>
+            <pre id="archiveStage" class="archive-stage" aria-label="Frozen ASCII event frame">No real event captured yet</pre>
+            <p id="archiveDetails" class="quiet archive-meta">Select an event above to inspect its source and timestamps.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel evidence-panel">
+        <div class="panel-title">RAW / STORED / SCREEN CHECK</div>
+        <div class="mini-grid">
+          <div><b>Raw value</b><code id="rawValue">--</code></div>
+          <div><b>Stored value</b><code id="storedValue">--</code></div>
+          <div><b>Screen value</b><code id="screenValue">--</code></div>
+        </div>
+        <p class="quiet">정상 조회 한 건에서 원자료에서 추출한 값, localStorage 저장값, 화면 표시값이 같은지 확인합니다.</p>
+      </section>
+
+      <section class="panel failure-panel">
+        <div class="panel-title">SYNTHETIC FAILURE REPLAY / CARD 3</div>
+        <p class="quiet">이 영역은 공개 고정자산 fixture만 사용합니다. 실제 NOAA 값과 섞지 않습니다.</p>
+        <div class="button-row">
+          <button data-action="resetReplay">Replay reset</button>
+          <button data-action="successSequence">D1-A → D1-B → D2</button>
+          <button data-action="fail" data-fixture="timeout">Timeout</button>
+          <button data-action="fail" data-fixture="auth-401">401/403</button>
+          <button data-action="fail" data-fixture="rate-429">Rate limit</button>
+          <button data-action="fail" data-fixture="offline">Offline</button>
+          <button data-action="fail" data-fixture="schema-break">Schema change</button>
+          <button data-action="recover">Recover D2</button>
+        </div>
+        <div class="failure-state">
+          <div><b>Freshness</b><code id="fixtureFreshness">--</code></div>
+          <div><b>Error</b><code id="fixtureError">--</code></div>
+          <div><b>Rows</b><code id="fixtureRows">0</code></div>
+          <div><b>Last good</b><code id="fixtureLastGood">--</code></div>
+          <div><b>Next action</b><code id="fixtureAction">--</code></div>
+        </div>
+        <pre id="fixtureLog" class="logbox">C:\AURORA\FIXTURE&gt; waiting</pre>
+      </section>
+
+      <section class="panel hash-panel">
+        <div class="panel-title">PUBLIC ASSET SHA-256 CHECK</div>
+        <button id="hashButton">Check README / contract / manifest</button>
+        <pre id="hashOutput" class="logbox">C:\AURORA\ASSETS&gt; not checked</pre>
+      </section>
+
+      <section class="panel source-panel">
+        <div class="panel-title">SOURCE / NO SECRET CALL</div>
+        <p><b>Live URL</b><br><code>https://services.swpc.noaa.gov/json/ovation_aurora_latest.json</code></p>
+        <p><b>Supplement URL</b><br><code>https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json</code></p>
+        <p class="quiet">비밀키, OAuth, CAPTCHA, 로그인 없이 브라우저에서 공개 JSON을 조회합니다.</p>
+      </section>
+    </section>
+
+    <footer class="command-bar">
+      <div>C:\AURORA\KILPISJARVI\OBSERVE &gt; <span id="commandText">ready</span><span class="cursor">_</span></div>
+      <div class="button-row compact">
+        <button id="liveButton">Fetch live data</button>
+        <button id="previewButton" class="preview-trigger" type="button">PREVIEW MODE</button>
+        <button id="clearLiveButton">Clear live records</button>
+        <button id="exportButton">Export review JSON</button>
+      </div>
+    </footer>
+  </main>
+
+  <dialog id="previewDialog" class="preview-dialog" aria-label="Aurora activity simulation, not real NOAA data">
+    <div class="preview-inner">
+      <div class="panel-title preview-title">
+        <span>AURORA PREVIEW MODE <b class="simulated-badge">SIMULATED / NOT SAVED</b></span>
+        <button id="previewClose" type="button">✕ Return to LIVE</button>
+      </div>
+      <p class="quiet">The exact same ASCII scene renderer is used. This slider does not change NOAA readings, daily records, or saved event captures.</p>
+      <div class="preview-controls">
+        <label for="previewSlider">Activity intensity:</label>
+        <strong id="previewValue">65 pt</strong>
+        <strong id="previewLevel" class="preview-level active">ACTIVE</strong>
+        <input id="previewSlider" type="range" min="0" max="100" step="1" value="65" />
+        <div class="preview-presets">
+          <button type="button" data-preview-score="4">LOW · 4</button>
+          <button type="button" data-preview-score="35">MODERATE · 35</button>
+          <button type="button" data-preview-score="65">ACTIVE · 65</button>
+          <button type="button" data-preview-score="85">STORM · 85</button>
+        </div>
+      </div>
+      <div class="preview-viewport"><pre id="previewStage" class="aurora-stage preview-stage" aria-label="Live-rendered simulated ASCII aurora frame"></pre></div>
+      <p class="quiet">PREVIEW ONLY — always simulated. Live monitoring continues independently in the background, but captures only genuine NOAA responses.</p>
+    </div>
+  </dialog>
+
+  <script src="./app.js"></script>
+</body>
+</html>
