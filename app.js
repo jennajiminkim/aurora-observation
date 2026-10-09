@@ -925,7 +925,7 @@
     if (preview.open) {
       els.previewStage.innerHTML = gridToHtml(buildAuroraGrid(preview.score, frame, 'fresh', true));
     }
-    const delay = Math.max(90, 170 - score * 0.55);
+    const delay = Math.max(200, 420 - score * 1.8);
     setTimeout(renderAuroraFrame, delay);
   }
 
@@ -1090,7 +1090,6 @@
     // the previously hidden ASCII viewport (otherwise it may be only 48 columns).
     if (next === 'observation') requestAnimationFrame(() => {
       measureStageColumns();
-      renderAuroraFrame();
     });
     if (updateHash) {
       try {
