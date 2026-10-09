@@ -43,6 +43,9 @@
     storedValue: $('storedValue'),
     screenValue: $('screenValue'),
     historyChart: $('historyChart'),
+    dailyLatest: $('dailyLatest'),
+    dailyMax: $('dailyMax'),
+    dailyMaxTime: $('dailyMaxTime'),
     recordsBody: $('recordsBody'),
     commandText: $('commandText'),
     fixtureFreshness: $('fixtureFreshness'),
@@ -128,16 +131,41 @@
     return Number.isFinite(delta) ? delta : null;
   }
 
+  // Daily row migration is non-destructive: previous v2.6 records have
+  // normalized_value (LATEST), but did not track an actual intraday peak.
+  // Their final saved value becomes the baseline. We never invent earlier peaks.
+  function peakOf(reading) {
+    if (!reading) return null;
+    const saved = reading.max_value;
+    return (saved !== undefined && saved !== null && Number.isFinite(Number(saved)))
+      ? Number(saved) : Number(reading.normalized_value);
+  }
+
+  function withDailyPeak(reading, existing) {
+    const previousPeak = peakOf(existing);
+    const better = previousPeak === null || !Number.isFinite(previousPeak)
+      || Number(reading.normalized_value) > previousPeak;
+    return {
+      ...reading,
+      max_value: better ? reading.normalized_value : previousPeak,
+      max_source_time: better ? (reading.source_time || null) : (existing.max_source_time ?? existing.source_time ?? null),
+      max_fetched_at: better ? reading.fetched_at : (existing.max_fetched_at ?? existing.fetched_at ?? null)
+    };
+  }
+
   function upsertReading(storageKey, reading) {
     validateReading(reading);
     const state = loadState(storageKey);
-    state.records[recordKey(reading)] = reading;
-    state.lastGood = reading;
+    // Keep the original public fixture adapter behavior fully unchanged.
+    const key = recordKey(reading);
+    const saved = storageKey === LIVE_KEY ? withDailyPeak(reading, state.records[key]) : reading;
+    state.records[key] = saved;
+    state.lastGood = saved;
     state.status = { freshness: 'fresh', error_code: 'none', updated_at: reading.fetched_at };
     saveState(storageKey, state);
     const records = sortedRecords(state, reading.signal_id);
-    const prev = previousRecord(records, reading);
-    return { state, records, previous: prev, delta: computeDelta(reading, prev), rowCount: records.length };
+    const prev = previousRecord(records, saved);
+    return { state, records, previous: prev, delta: computeDelta(saved, prev), rowCount: records.length };
   }
 
   function markFailure(storageKey, errorCode, detail) {
@@ -205,6 +233,9 @@
     els.rawValue.textContent = `${fmtNum(last.raw_value ?? last.normalized_value, 0)} ${last.unit}`;
     els.storedValue.textContent = `${fmtNum(last.normalized_value, 0)} ${last.unit}`;
     els.screenValue.textContent = `${els.activityValue.textContent} ${last.unit}`;
+    els.dailyLatest.textContent = `${fmtNum(last.normalized_value, 0)} ${last.unit}`;
+    els.dailyMax.textContent = `${fmtNum(peakOf(last), 0)} ${last.unit}`;
+    els.dailyMaxTime.textContent = fmtTime(last.max_source_time ?? last.source_time);
     els.commandText.textContent = state.status?.freshness === 'stale'
       ? `last valid ${last.record_date} preserved; current ${state.status.error_code}`
       : `stored ${last.record_date} / ${fmtNum(last.normalized_value, 0)} ${last.unit}`;
@@ -221,7 +252,10 @@
     els.activityBar.style.width = '0%';
     ['yesterdayValue','deltaValue','kpValue','recordDate','sourceTime','fetchedAt','rawValue','storedValue','screenValue'].forEach(id => $(id).textContent = '--');
     els.historyChart.innerHTML = '';
-    els.recordsBody.innerHTML = '<tr><td colspan="4">No live records yet.</td></tr>';
+    els.dailyLatest.textContent = '--';
+    els.dailyMax.textContent = '--';
+    els.dailyMaxTime.textContent = '--';
+    els.recordsBody.innerHTML = '<tr><td colspan="6">No live records yet.</td></tr>';
     els.commandText.textContent = 'ready';
   }
 
@@ -244,15 +278,17 @@
 
   function renderRecords(records) {
     if (!records.length) {
-      els.recordsBody.innerHTML = '<tr><td colspan="4">No live records yet.</td></tr>';
+      els.recordsBody.innerHTML = '<tr><td colspan="6">No live records yet.</td></tr>';
       return;
     }
-    els.recordsBody.innerHTML = records.slice(-6).reverse().map(r => `
+    els.recordsBody.innerHTML = records.slice(-14).reverse().map(r => `
       <tr>
-        <td>${escapeHtml(r.record_date)}</td>
-        <td>${fmtNum(r.normalized_value, 0)} ${escapeHtml(r.unit)}</td>
+        <td class="date-cell">${escapeHtml(r.record_date)}</td>
+        <td class="latest-cell">${fmtNum(r.normalized_value, 0)} ${escapeHtml(r.unit)}</td>
+        <td class="peak-cell">${fmtNum(peakOf(r), 0)} ${escapeHtml(r.unit)}</td>
+        <td>${escapeHtml(fmtTime(r.max_source_time ?? r.source_time))}</td>
         <td>${escapeHtml(fmtTime(r.source_time))}</td>
-        <td>${escapeHtml(r.freshness || 'fresh')}</td>
+        <td><span class="record-status">${escapeHtml(r.freshness || 'fresh')}</span></td>
       </tr>`).join('');
   }
 
@@ -1041,7 +1077,34 @@
     URL.revokeObjectURL(a.href);
   }
 
+  function setSiteView(view, updateHash = false) {
+    const next = view === 'verification' ? 'verification' : 'observation';
+    $('observationView').hidden = next !== 'observation';
+    $('verificationView').hidden = next !== 'verification';
+    document.querySelectorAll('[data-view-target]').forEach(tab => {
+      const active = tab.dataset.viewTarget === next;
+      tab.classList.toggle('is-active', active);
+      tab.setAttribute('aria-pressed', String(active));
+    });
+    // Returning from a directly opened #verification view requires remeasuring
+    // the previously hidden ASCII viewport (otherwise it may be only 48 columns).
+    if (next === 'observation') requestAnimationFrame(() => {
+      measureStageColumns();
+      renderAuroraFrame();
+    });
+    if (updateHash) {
+      try {
+        history.replaceState(null, '', next === 'verification' ? '#verification' : location.pathname + location.search);
+      } catch (_) { /* Embedded/file previews may forbid History API URL changes. */ }
+      window.scrollTo({top:0,behavior:'instant'});
+    }
+  }
+
   function bindEvents() {
+    document.querySelectorAll('[data-view-target]').forEach(tab => {
+      tab.addEventListener('click', () => setSiteView(tab.dataset.viewTarget, true));
+    });
+    window.addEventListener('hashchange', () => setSiteView(location.hash === '#verification' ? 'verification' : 'observation'));
     $('liveButton').addEventListener('click', fetchLive);
     $('previewButton').addEventListener('click', openPreview);
     $('previewClose').addEventListener('click', closePreview);
@@ -1076,6 +1139,7 @@
   }
 
   bindEvents();
+  setSiteView(location.hash === '#verification' ? 'verification' : 'observation');
   tickClock();
   renderLive();
   renderFixtureState(loadState(REPLAY_KEY), 'waiting');

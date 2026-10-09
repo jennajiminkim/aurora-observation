@@ -1,11 +1,18 @@
-Aurora Observation Terminal v2.6 — Preview + Real-Data Event Archive
+Aurora Observation Terminal v2.7 — MINIMAL PATCH
 
-Recommended: make a backup of your project folder and click "Export review JSON" in the existing site before updating.
+Replace these files in the same GitHub repository path:
+  index.html
+  styles.css
+  app.js
 
-Copy index.html, styles.css, and app.js from this patch into your existing aurora-observation-terminal folder, replacing exactly those three files. Keep all your existing assets/studio-task-assets/... files and docs folder.
+Keep the existing assets/studio-task-assets/t04-real-information-board/ folder and your other docs unchanged.
+Optional: copy README.md and docs/v2.7-verification.md for updated instructions.
 
-On Windows Chrome, press Ctrl+Shift+R for a hard refresh. Using the SAME original URL/origin is important for preserving browser localStorage records. Opening a different file:// path or a new GitHub Pages URL may not expose previous records.
+Before deploying, use Export review JSON on the existing Vercel site to back up real data.
+Do NOT click Clear live records. Keep the same public origin and browser to retain localStorage records.
 
-PREVIEW MODE is synthetic, never written to either real or fixture storage. Real events are captured only after successful NOAA responses >=65pt while your browser is open and polling approximately every 15 minutes. Stored snapshots remain in this browser; no backend runs while the tab is closed.
-
-The included test report documents simulated integration testing, NOT proof of real NOAA values. Real Card 5 evidence requires 2 real KST dates.
+After pushing to GitHub and Vercel finishes deploying:
+  1) Confirm DAILY RECORDS: LATEST / MAX / MAX TIME
+  2) Confirm top OBSERVATION / VERIFICATION view switch
+  3) Check SHA-256 and synthetic failure fixtures under VERIFICATION
+  4) Make sure genuine real two-date evidence remains separate from fixtures

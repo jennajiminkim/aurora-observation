@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Aurora Observation Terminal</title>
+  <title>Aurora Observation Terminal | Live &amp; Verification</title>
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
@@ -12,15 +12,19 @@
     <header class="topbar" aria-label="application menu">
       <div class="menu-left">
         <span class="app-icon">▣</span>
-        <span>File</span><span>Edit</span><span>View</span><span>Chart</span><span>Camera</span><span>Station</span><span>Window</span><span>Help</span>
+        <span class="app-wordmark">AURORA.EXE</span>
+        <nav class="view-nav" aria-label="Site sections">
+          <button type="button" data-view-target="observation" class="view-tab is-active" aria-pressed="true">OBSERVATION</button>
+          <button type="button" data-view-target="verification" class="view-tab" aria-pressed="false">VERIFICATION</button>
+        </nav>
       </div>
       <time id="clockUtc">--:--:-- UTC</time>
     </header>
 
-    <section class="terminal-frame" aria-label="Aurora observation information board">
+    <section class="terminal-frame" id="observationView" aria-label="Aurora observation information board">
       <section class="panel hero-panel">
         <div class="panel-title">
-          <span>AURORA OBSERVATION SYSTEM v2.6</span>
+          <span>AURORA OBSERVATION SYSTEM v2.7</span>
           <span id="liveBadge" class="badge standby">STANDBY</span>
         </div>
 
@@ -52,12 +56,21 @@
       </aside>
 
       <section class="panel chart-panel">
-        <div class="panel-title">DAILY RECORDS / ASIA-SEOUL</div>
+        <div class="panel-title daily-header"><span>DAILY RECORDS <small>/ ASIA-SEOUL</small></span><span class="daily-tag">ONE ROW PER KST DATE</span></div>
+        <div class="daily-summary" aria-label="Latest activity and today's observed peak">
+          <div class="daily-metric"><span class="daily-metric-label">LATEST</span><strong id="dailyLatest">--</strong><small>Latest successful NOAA fetch</small></div>
+          <div class="daily-metric max"><span class="daily-metric-label">MAX (OBSERVED)</span><strong id="dailyMax">--</strong><small>Highest value fetched on this KST date</small></div>
+          <div class="daily-metric"><span class="daily-metric-label">MAX TIME <em>NOAA · UTC</em></span><strong class="daily-time" id="dailyMaxTime">--</strong><small>Source forecast timestamp</small></div>
+        </div>
+        <div class="daily-history-label">DAILY LATEST TREND <span>latest samples only · daily peaks shown below</span></div>
         <div id="historyChart" class="history-chart" aria-label="daily record chart"></div>
-        <table class="record-table">
-          <thead><tr><th>Date</th><th>Value</th><th>Source time</th><th>Status</th></tr></thead>
-          <tbody id="recordsBody"><tr><td colspan="4">No live records yet.</td></tr></tbody>
-        </table>
+        <div class="table-scroll" role="region" aria-label="Saved daily records" tabindex="0">
+          <table class="record-table">
+            <thead><tr><th>Date (KST)</th><th>Latest</th><th>Max</th><th>Max time (NOAA UTC)</th><th>Latest source time (UTC)</th><th>Status</th></tr></thead>
+            <tbody id="recordsBody"><tr><td colspan="6">No live records yet.</td></tr></tbody>
+          </table>
+        </div>
+        <p class="quiet daily-note">MAX = highest value successfully fetched <b>in this browser</b>, not a complete-day NOAA maximum. Earlier records without a saved MAX use the last saved value as their initial baseline.</p>
       </section>
 
       <section class="panel archive-panel" aria-label="Captured real aurora event archive">
@@ -84,6 +97,28 @@
         </div>
       </section>
 
+
+
+
+      <section class="panel source-panel">
+        <div class="panel-title">SOURCE / NO SECRET CALL</div>
+        <p><b>Live URL</b><br><code>https://services.swpc.noaa.gov/json/ovation_aurora_latest.json</code></p>
+        <p><b>Supplement URL</b><br><code>https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json</code></p>
+        <p class="quiet">비밀키, OAuth, CAPTCHA, 로그인 없이 브라우저에서 공개 JSON을 조회합니다.</p>
+      </section>
+    </section>
+
+
+    <section id="verificationView" class="verification-workspace" aria-labelledby="verificationTitle" hidden>
+      <div class="verification-intro">
+        <div>
+          <div class="verification-eyebrow">QUALITY ASSURANCE / T04</div>
+          <h1 id="verificationTitle">VERIFICATION LAB</h1>
+          <p>Public test tools for the assignment. Synthetic fixtures are isolated from actual NOAA readings, daily records and event captures.</p>
+        </div>
+        <div class="verification-indicator"><span class="indicator-dot"></span> TEST ENVIRONMENT</div>
+      </div>
+      <div class="verification-grid">
       <section class="panel evidence-panel">
         <div class="panel-title">RAW / STORED / SCREEN CHECK</div>
         <div class="mini-grid">
@@ -93,7 +128,6 @@
         </div>
         <p class="quiet">정상 조회 한 건에서 원자료에서 추출한 값, localStorage 저장값, 화면 표시값이 같은지 확인합니다.</p>
       </section>
-
       <section class="panel failure-panel">
         <div class="panel-title">SYNTHETIC FAILURE REPLAY / CARD 3</div>
         <p class="quiet">이 영역은 공개 고정자산 fixture만 사용합니다. 실제 NOAA 값과 섞지 않습니다.</p>
@@ -116,19 +150,12 @@
         </div>
         <pre id="fixtureLog" class="logbox">C:\AURORA\FIXTURE&gt; waiting</pre>
       </section>
-
       <section class="panel hash-panel">
         <div class="panel-title">PUBLIC ASSET SHA-256 CHECK</div>
         <button id="hashButton">Check README / contract / manifest</button>
         <pre id="hashOutput" class="logbox">C:\AURORA\ASSETS&gt; not checked</pre>
       </section>
-
-      <section class="panel source-panel">
-        <div class="panel-title">SOURCE / NO SECRET CALL</div>
-        <p><b>Live URL</b><br><code>https://services.swpc.noaa.gov/json/ovation_aurora_latest.json</code></p>
-        <p><b>Supplement URL</b><br><code>https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json</code></p>
-        <p class="quiet">비밀키, OAuth, CAPTCHA, 로그인 없이 브라우저에서 공개 JSON을 조회합니다.</p>
-      </section>
+      </div>
     </section>
 
     <footer class="command-bar">

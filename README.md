@@ -79,3 +79,32 @@
 ### Deployment/backup
 
 Keep the same public GitHub Pages URL and browser origin to preserve saved daily/event records. **Before replacing files, click `Export review JSON` to back up real daily records.** This output is a backup/evidence file, not a one-click import mechanism. Do not replace the provided Card 3 assets; their SHA-256 values are unchanged (see `docs/hash-check.txt`).
+
+## v2.7 — Daily Max & Verification Menu (2026-10)
+
+### DAILY RECORDS: one row per KST day
+
+- The existing `aot_live_records_v1` localStorage key and `signal_id::record_date` row key are preserved. The real observations recorded with v2.6 are **not deleted or overwritten during installation**.
+- On every **successful actual NOAA request**, `normalized_value` remains the current day's `LATEST` (last successful request). New fields `max_value`, `max_source_time`, `max_fetched_at` track the maximum of values successfully fetched on the same KST date.
+- A higher score replaces `MAX` and its source timestamp. A lower (or equal) score does **not** lower `MAX` or move `MAX TIME`.
+- The next `Asia/Seoul` date uses a new key and starts its own `LATEST` and `MAX` values. `YESTERDAY` and `CHANGE` continue comparing the **LATEST** values of consecutive saved daily rows, not the peaks.
+- For pre-v2.7 rows with no prior MAX field, the retained last reading is the initial baseline. An earlier same-day high that v2.6 already replaced cannot be recovered. This is explicitly shown in the UI.
+- `MAX TIME` is the **NOAA source forecast timestamp** (`max_source_time`, displayed in UTC), not the browser fetch time. `MAX` is **the maximum captured in this browser**, not a claim to a global NOAA daily peak.
+- `Export review JSON` includes the new max fields within the existing `live_records`; the Card 3 public fixtures and event-archive storage are unchanged.
+
+### VERIFICATION / UI
+
+- The top menu switches between **OBSERVATION** (normal dashboard, daily records, source, 65pt event archive) and **VERIFICATION** (RAW / STORED / SCREEN; SHA-256; all synthetic Card 3 failure controls).
+- The verification page also has a shareable `#verification` URL fragment; no authentication is required.
+- Synthetic fixtures remain isolated in `aot_fixture_records_v1`; clicking fixture buttons will not update real daily records or event captures.
+- The ASCII stage / view renderer, 15-minute browser auto-polling, safe PREVIEW MODE, threshold >=65pt event capture and PNG/HTML frame downloads remain unchanged.
+
+### Updating an existing GitHub → Vercel deployment
+
+1. In the existing public site, first click **Export review JSON** to back up your browser's real data. Keep a copy of the previous project files.
+2. Overwrite **only** `index.html`, `styles.css`, and `app.js` from the v2.7 patch in the **same existing GitHub repository and path**. Commit and push. Vercel should deploy the changed files.
+3. Open the **same Vercel origin** in the **same browser profile** to preserve your existing localStorage data. The view switch does not reset storage. Avoid `Clear live records` unless intentionally deleting the daily rows.
+4. Inspect DAILY RECORDS, then visit `#verification` and verify SHA-256 and the five failure/recovery scenarios. The original public T04 asset bytes are unchanged.
+5. Card 5 still requires two actual KST dates. localStorage records are **not automatically shared across incognito windows or devices**; export genuine evidence and make it accessible for evaluation separately. Fixture observations are never a substitute for two real dates.
+
+**Compatibility note:** No Supabase database and no 24-hour background server have been added. NOAA polling continues only while a browser keeps the page running; a paused background tab can skip observation times.
