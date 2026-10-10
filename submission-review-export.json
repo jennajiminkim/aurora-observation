@@ -1,0 +1,87 @@
+{
+  "project": "Aurora Observation Terminal",
+  "station": {
+    "signalId": "aurora-kilpisjarvi-ovation",
+    "name": "KILPISJÄRVI 01",
+    "lat": 69.03,
+    "lon": 20.79,
+    "timezone": "Asia/Seoul"
+  },
+  "live_source": "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json",
+  "supplement_source": "https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json",
+  "timezone": "Asia/Seoul",
+  "exported_at": "2026-10-10T09:16:16.334Z",
+  "live_records": [
+    {
+      "signal_id": "aurora-kilpisjarvi-ovation",
+      "normalized_value": 5,
+      "raw_value": 5,
+      "unit": "pt",
+      "source_name": "NOAA SWPC OVATION Aurora Forecast",
+      "source_url": "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json",
+      "source_time": "2026-10-09T16:01:00Z",
+      "fetched_at": "2026-10-09T14:58:38.585Z",
+      "record_timezone": "Asia/Seoul",
+      "record_date": "2026-10-09",
+      "freshness": "fresh",
+      "station_name": "KILPISJÄRVI 01",
+      "station_lat": 69.03,
+      "station_lon": 20.79,
+      "source_sample_lat": 74,
+      "source_sample_lon": 20,
+      "nearby_samples": 240,
+      "note": "Local aurora activity score derived from NOAA OVATION grid values around Kilpisjärvi, Finland.",
+      "max_value": 9,
+      "max_source_time": "2026-10-09T12:04:00Z",
+      "max_fetched_at": "2026-10-09T10:59:47.774Z"
+    },
+    {
+      "signal_id": "aurora-kilpisjarvi-ovation",
+      "normalized_value": 5,
+      "raw_value": 5,
+      "unit": "pt",
+      "source_name": "NOAA SWPC OVATION Aurora Forecast",
+      "source_url": "https://services.swpc.noaa.gov/json/ovation_aurora_latest.json",
+      "source_time": "2026-10-10T10:10:00Z",
+      "fetched_at": "2026-10-10T09:14:56.229Z",
+      "record_timezone": "Asia/Seoul",
+      "record_date": "2026-10-10",
+      "freshness": "fresh",
+      "station_name": "KILPISJÄRVI 01",
+      "station_lat": 69.03,
+      "station_lon": 20.79,
+      "source_sample_lat": 74,
+      "source_sample_lon": 21,
+      "nearby_samples": 240,
+      "note": "Local aurora activity score derived from NOAA OVATION grid values around Kilpisjärvi, Finland.",
+      "max_value": 16,
+      "max_source_time": "2026-10-10T02:24:00Z",
+      "max_fetched_at": "2026-10-10T01:20:02.997Z"
+    }
+  ],
+  "live_status": {
+    "freshness": "fresh",
+    "error_code": "none",
+    "updated_at": "2026-10-10T09:14:56.229Z"
+  },
+  "replay_records": [],
+  "replay_status": {
+    "freshness": "empty",
+    "error_code": "none"
+  },
+  "real_event_archive": [],
+  "event_policy": {
+    "threshold_pt": 65,
+    "rearm_below_pt": 60,
+    "rearm_distinct_forecasts": 2,
+    "poll_minutes": 15,
+    "source": "real NOAA only",
+    "scope": "this browser only"
+  },
+  "asset_hashes_expected": {
+    "README.md": "b9d0d4c076f8c1e1d9faf1a42d5bea42b0c47e5018e8f46af31f3798adc8d80c",
+    "public-contract.json": "647d2ea2ce97005aebcbe9ccd62f380bc6efb10967729464bb1df67b3588edeb",
+    "asset-manifest.json": "8adc0f6caea09e45c8fcdd42e239653e942227e306f688c780a18d441a6b7b41"
+  },
+  "note": "Actual two-day evidence requires running the live fetch on two different Asia/Seoul dates. Synthetic fixtures do not replace live evidence."
+}
